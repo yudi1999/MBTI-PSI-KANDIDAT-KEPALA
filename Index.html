@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <title>Tes MBTI - Psikotes Calon Kepala Toko</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background-color: #4f46e5;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #4338ca;
+        }
+        .btn-primary:disabled {
+            background-color: #a5b4fc;
+            cursor: not-allowed;
+        }
+        /* Spinner for loading state */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border-left-color: #fff;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen p-4">
+
+    <div id="app" class="max-w-4xl w-full mx-auto">
+
+        <!-- Halaman Data Diri -->
+        <div id="welcome-page" class="card">
+            <div class="text-center">
+                <h1 class="text-3xl font-bold text-gray-900">Tes MBTI (Myer Briggs Type Indicator)</h1>
+                <p class="text-xl text-gray-700 mt-2">untuk Calon Kepala Toko</p>
+                <p class="mt-4 text-gray-600">Selamat datang! Silakan isi data diri Anda untuk memulai tes.</p>
+            </div>
+            <form id="data-diri-form" class="mt-8 space-y-6">
+                <div>
+                    <label for="nama" class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                    <input type="text" id="nama" name="nama" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" name="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                 <div>
+                    <label for="posisi" class="block text-sm font-medium text-gray-700">Posisi yang Dilamar</label>
+                    <input type="text" id="posisi" name="posisi" value="Kepala Toko" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div class="flex items-start">
+                    <div class="flex items-center h-5">
+                        <input id="persetujuan" name="persetujuan" type="checkbox" required class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label for="persetujuan" class="font-medium text-gray-700">Persetujuan</label>
+                        <p class="text-gray-500">Saya setuju bahwa data dan hasil tes ini akan disimpan dan digunakan untuk keperluan proses seleksi. Saya memahami bahwa data ini akan dijaga kerahasiaannya.</p>
+                    </div>
+                </div>
+                <div>
+                    <button type="submit" id="start-btn" class="w-full flex justify-center btn-primary" disabled>
+                        Mulai Tes
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Halaman Tes -->
+        <div id="test-page" class="card hidden">
+            <h2 class="text-2xl font-bold text-center">Tes Kepribadian</h2>
+            <div class="mt-4">
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+            <div id="question-container" class="mt-8">
+                <!-- Pertanyaan akan dimuat di sini -->
+            </div>
+            <div class="mt-6 text-center">
+                 <p id="validation-message" class="text-red-500 text-sm mb-4 hidden"></p>
+            </div>
+            <div class="mt-2 flex justify-between">
+                <button id="prev-btn" class="btn-primary" style="background-color: #6b7280;">Sebelumnya</button>
+                <button id="next-btn" class="btn-primary">Selanjutnya</button>
+                <button id="finish-btn" class="w-full md:w-auto btn-primary hidden flex justify-center items-center">
+                    <span id="finish-btn-text">Selesaikan Tes</span>
+                    <div id="finish-spinner" class="spinner hidden"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Halaman Terima Kasih -->
+        <div id="thank-you-page" class="card hidden">
+            <div class="text-center">
+                <svg class="mx-auto h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h2 class="mt-4 text-2xl font-bold text-gray-900">Terima Kasih!</h2>
+                <p class="mt-2 text-gray-600">Anda telah menyelesaikan tes kepribadian. Hasil Anda telah berhasil dikirimkan. Tim rekrutmen akan menghubungi Anda untuk tahap selanjutnya.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Data Pertanyaan (tetap sama)
+        const questions = [
+            { no: 1, question: "Pada sebuah pesta, apakah Anda:", a: "bergaul dengan banyak orang termasuk orang-orang yang baru Anda kenal", b: "bergaul dengan beberapa orang yang telah Anda kenal saja" },
+            { no: 2, question: "Apakah Anda lebih:", a: "realistik", b: "spekulatif" },
+            { no: 3, question: "Adalah hal yang buruk:", a: "tenggelam dalam mengandai-andai", b: "terlanjur basah kerepotan di tengah jalan" },
+            { no: 4, question: "Biasanya Anda lebih terkesan dengan:", a: "prinsip", b: "perasaan" },
+            { no: 5, question: "Apakah Anda cenderung lebih terjelaskan melalui:", a: "argumen logis", b: "argumen emotif (feeling)" },
+            { no: 6, question: "Apakah Anda lebih menyukai bekerja:", a: "menggunakan batas waktu", b: "kapan-kapan saja" },
+            { no: 7, question: "Apakah Anda cenderung untuk memilih:", a: "secara berhati-hati", b: "secara spontan" },
+            { no: 8, question: "Di pesta-pesta, Anda:", a: "tinggal sampai pesta berakhir dengan semakin segar", b: "meninggalkan pesta lebih cepat dengan kondisi capai/lelah" },
+            { no: 9, question: "Apakah Anda merupakan seseorang yang lebih:", a: "banyak menggunakan akal sehat", b: "imajinatif" },
+            { no: 10, question: "Apakah Anda lebih tertarik pada:", a: "apa yang aktual", b: "apa yang mungkin" },
+            { no: 11, question: "Dalam memutuskan/memberi penilaian pada orang lain Anda lebih dipengaruhi oleh:", a: "hukum daripada situasi/keadaannya", b: "situasi/keadaannya daripada hukum" },
+            { no: 12, question: "Ketika pertama kali mendekati orang lain, apakah Anda lebih:", a: "tidak melibatkan perasaan dan menjaga jarak", b: "melibatkan diri secara pribadi dan mencoba membuat orang tersebut tertarik" },
+            { no: 13, question: "Apakah Anda biasanya lebih:", a: "tepat waktu", b: "santai" },
+            { no: 14, question: "Apakah mengganggu Anda, mempunyai banyak hal yang:", a: "tidak lengkap/tidak terselesaikan", b: "sudah lengkap/terselesaikan" },
+            { no: 15, question: "Dalam kelompok sosial Anda, Anda:", a: "mengetahui kejadian-kejadian yang dialami oleh orang lain", b: "biasanya ketinggalan berita" },
+            { no: 16, question: "Dalam mengerjakan sesuatu yang biasa, Anda lebih suka:", a: "mengerjakannya dengan cara lazimnya orang", b: "mengerjakannya dengan cara Anda sendiri" },
+            { no: 17, question: "Apakah Anda memilih penulis yang:", a: "menuliskan kata-kata dengan arti yang sebenarnya", b: "menggunakan kiasan-kiasan" },
+            { no: 18, question: "Bagi Anda, apa yang lebih penting:", a: "konsisten dan teguh dengan pemikiran/ide Anda", b: "menjaga keharmonisan hubungan sosial" },
+            { no: 19, question: "Anda merasa nyaman, membuat:", a: "keputusan logis", b: "keputusan berdasar nilai-nilai" },
+            { no: 20, question: "Apakah biasanya Anda:", a: "menyukai segala hal terselesaikan", b: "membiarkan berbagai pilihan dengan berbagai kemungkinan" },
+            { no: 21, question: "Menurut Anda, Anda orang yang:", a: "tegas, saklek, keras pendirian/kemauan", b: "nyantai, bisa menyesuaikan pendirian/kemauan (easy-going)" },
+            { no: 22, question: "Dalam menelpon, apakah Anda:", a: "langsung berbicara", b: "menyusun dulu kata-kata yang diucapkan" },
+            { no: 23, question: "Untuk Anda, fakta adalah:", a: "menggambarkan apa yang terjadi", b: "biasanya perlu diinterpretasi" },
+            { no: 24, question: "Apakah Anda memilih bekerja dengan:", a: "informasi praktis", b: "ide-ide abstrak" },
+            { no: 25, question: "Apakah Anda cenderung lebih:", a: "berpikiran jernih", b: "berperasaan hangat" },
+            { no: 26, question: "Apakah Anda lebih suka menjadi seorang yang:", a: "adil daripada pemaaf", b: "pemaaf daripada adil" },
+            { no: 27, question: "Bagi Anda, mengalami sesuatu:", a: "harus direncanakan dan berdasarkan pilihan", b: "biarlah berjalan dengan sendirinya" },
+            { no: 28, question: "Apakah Anda lebih nyaman dengan:", a: "langsung beli/dipesankan", b: "mempunyai pilihan-pilihan" },
+            { no: 29, question: "Dalam suatu pertemuan apakah Anda:", a: "memulai pembicaraan-pembicaraan", b: "menunggu untuk ditanya" },
+            { no: 30, question: "Akal sehat gaya tradisional:", a: "biasanya bisa dipercaya", b: "sering menimbulkan salah tafsir" },
+            { no: 31, question: "Anak-anak tidak:", a: "cukup sering melakukan kegiatan bermanfaat", b: "cukup berfantasi" },
+            { no: 32, question: "Apakah biasanya Anda lebih:", a: "mempertahankan prinsip", b: "bersikap simpatik" },
+            { no: 33, question: "Apakah Anda biasanya lebih bersikap:", a: "tegas daripada lemah lembut", b: "lemah-lembut daripada tegas" },
+            { no: 34, question: "Apakah Anda cenderung lebih menjaga hal-hal agar:", a: "terorganisasi dengan baik", b: "terbuka untuk kemungkinan-kemungkinan" },
+            { no: 35, question: "Apakah Anda lebih menghargai:", a: "sesuatu yang pasti", b: "sesuatu yang berubah-ubah" },
+            { no: 36, question: "Apakah interaksi baru dengan orang lain:", a: "menggugah semangat Anda", b: "menguras tenaga Anda" },
+            { no: 37, question: "Anda menggambarkan diri Anda lebih sering sebagai:", a: "orang yang praktis", b: "orang yang teoritis" },
+            { no: 38, question: "Anda lebih melihat orang lain:", a: "dari bagaimana kemanfaatannya", b: "dari bagaimana kelihatannya" },
+            { no: 39, question: "Mana yang lebih memuaskan Anda:", a: "mendiskusikan suatu topik sampai tuntas", b: "mencapai kesepakatan tentang suatu permasalahan" },
+            { no: 40, question: "Yang mana lebih banyak Anda gunakan:", a: "pemikiran", b: "perasaan" },
+            { no: 41, question: "Anda lebih nyaman dengan pekerjaan yang:", a: "berdasarkan kontrak", b: "tidak terikat" },
+            { no: 42, question: "Anda lebih menyukai bila segala hal:", a: "rapi dan teratur", b: "tergantung situasi" },
+            { no: 43, question: "Apakah Anda lebih memilih:", a: "banyak teman dengan hubungan yang singkat", b: "beberapa teman dengan hubungan yang lama/langgeng" },
+            { no: 44, question: "Apakah Anda lebih beranjak pada:", a: "fakta-fakta", b: "kaidah-kaidah" },
+            { no: 45, question: "Apakah Anda lebih tertarik pada:", a: "produksi dan distribusi/hasil akhir", b: "perencana, penelitian" },
+            { no: 46, question: "Mana yang lebih patut dipuji:", a: "orang yang sangat logis", b: "orang yang sangat sentimentil (mengedepankan perasaan)" },
+            { no: 47, question: "Apakah Anda menghargai diri Anda karena:", a: "berpendirian teguh", b: "penuh pengabdian" },
+            { no: 48, question: "Apakah Anda lebih suka dengan:", a: "pernyataan-pernyataan final dan tidak bisa diganggu-gugat", b: "pernyataan-pernyataan tidak bersifat pasti (tentative)/masih awal" },
+            { no: 49, question: "Apakah Anda lebih nyaman dengan:", a: "sesudah pengambilan keputusan", b: "sebelum pengambilan keputusan" },
+            { no: 50, question: "Apakah Anda:", a: "berbicara dengan mudah dan panjang lebar dengan orang yang baru dikenal", b: "sulit bicara dengan orang yang baru dikenal" },
+            { no: 51, question: "Apakah Anda sepertinya lebih mempercayai:", a: "pengalaman-pengalaman", b: "firasat/dugaan/prasangka" },
+            { no: 52, question: "Apakah Anda merasa:", a: "lebih praktis daripada kreatif", b: "lebih kreatif daripada praktis" },
+            { no: 53, question: "Apakah Anda memiliki ciri khas sebagai seorang dengan:", a: "rasio jelas", b: "perasaan yang kuat" },
+            { no: 54, question: "Apakah Anda cenderung lebih:", a: "adil apa adanya/tanpa prasangka", b: "manruh perhatian (simpatis)" },
+            { no: 55, question: "Anda sangat menyukai tindakan yang:", a: "memastikan segala sesuatu ditata dahulu", b: "membiarkan hal-hal yang terjadi begitu saja" },
+            { no: 56, question: "Apakah cara-cara Anda lebih pada:", a: "mengatur segala sesuatu", b: "menunda-nunda penyelesaian" },
+            { no: 57, question: "Bila telepon berbunyi, Anda akan:", a: "segera menerima telepon tersebut", b: "berharap orang lain yang menerimanya" },
+            { no: 58, question: "Apakah Anda lebih menghargai diri Anda dalam hal:", a: "kemampuan memahami realita", b: "kemampuan imajinasi yang baik" },
+            { no: 59, question: "Apakah Anda lebih tertarik pada:", a: "azas", b: "penyesuaian" },
+            { no: 60, question: "Dalam menilai, biasanya Anda lebih bersikap:", a: "netral", b: "pemurah" },
+            { no: 61, question: "Apakah Anda lebih menganggap diri Anda sebagai orang yang:", a: "keras hati/teguh", b: "lunak hati/halus" },
+            { no: 62, question: "Apakah Anda lebih cenderung mengalami:", a: "kejadian-kejadian yang telah terjadwal", b: "kejadian-kejadian yang datang begitu saja" },
+            { no: 63, question: "Apakah Anda lebih termasuk tipe orang yang menyukai:", a: "hal-hal yang bersifat rutin", b: "hal-hal yang tidak biasa" },
+            { no: 64, question: "Apakah Anda cenderung", a: "mudah didekati", b: "agak menjaga jarak" },
+            { no: 65, question: "Bila Anda menulis, Anda lebih menyukai:", a: "memakai kata-kata dengan arti yang sebenarnya", b: "menggunakan kata-kata kiasan" },
+            { no: 66, question: "Apakah Anda merasa lebih senang dengan:", a: "mengalami sendiri dan nyata", b: "membayangkan" },
+            { no: 67, question: "Apakah biasanya Anda lebih:", a: "berpikiran jernih", b: "menunjukkan perasaan yang kuat" },
+            { no: 68, question: "Apakah Anda lebih:", a: "adil daripada toleran", b: "toleran daripada adil" },
+            { no: 69, question: "Apakah Anda lebih memilih:", a: "kegiatan yang terencana", b: "kegiatan yang tidak terencana" },
+            { no: 70, question: "Apakah Anda cenderung lebih:", a: "hati-hati daripada spontan", b: "spontan daripada hati-hati" },
+        ];
+
+        // Kunci Jawaban untuk Skoring
+        const answerKey = {
+            E: [1, 8, 15, 22, 29, 36, 43, 50, 57, 64],
+            S: [2, 3, 9, 10, 16, 17, 23, 24, 30, 31, 37, 38, 44, 45, 51, 52, 58, 59, 65, 66],
+            T: [4, 5, 11, 12, 18, 19, 25, 26, 32, 33, 39, 40, 46, 47, 53, 54, 60, 61, 67, 68],
+            J: [6, 7, 13, 14, 20, 21, 27, 28, 34, 35, 41, 42, 48, 49, 55, 56, 62, 63, 69, 70]
+        };
+        
+        const answerKeyType = {
+            1: 'a', 8: 'a', 15: 'a', 22: 'a', 29: 'a', 36: 'a', 43: 'a', 50: 'a', 57: 'a', 64: 'a',
+            2: 'a', 3: 'a', 9: 'a', 10: 'a', 16: 'a', 17: 'a', 23: 'a', 24: 'a', 30: 'a', 31: 'a', 37: 'a', 38: 'a', 44: 'a', 45: 'a', 51: 'a', 52: 'a', 58: 'a', 59: 'a', 65: 'a', 66: 'a',
+            4: 'a', 5: 'a', 11: 'a', 12: 'a', 18: 'a', 19: 'a', 25: 'a', 26: 'a', 32: 'a', 33: 'a', 39: 'a', 40: 'a', 46: 'a', 47: 'a', 53: 'a', 54: 'a', 60: 'a', 61: 'a', 67: 'a', 68: 'a',
+            6: 'a', 7: 'a', 13: 'a', 14: 'a', 20: 'a', 21: 'a', 27: 'a', 28: 'a', 34: 'a', 35: 'a', 41: 'a', 42: 'a', 48: 'a', 49: 'a', 55: 'a', 56: 'a', 62: 'a', 63: 'a', 69: 'a', 70: 'a',
+        };
+
+        // Data Interpretasi Hasil (SANGAT DETAIL)
+        const allInterpretations = {
+            ISTJ: {
+                description: "Praktis, berorientasi pada fakta, dan sangat bertanggung jawab. Mereka adalah individu yang tertib, teratur, dan dapat diandalkan yang menghargai tradisi dan kesetiaan. Mereka bekerja dengan mantap menuju tujuan mereka, fokus pada detail, dan memastikan semuanya berjalan sesuai rencana dan standar yang ada.",
+                strengths: ["Sangat Terorganisir: Mampu menciptakan dan memelihara ketertiban dalam sistem, inventaris, dan jadwal.", "Teliti dan Detail: Tidak ada detail kecil yang terlewat, sangat baik untuk audit dan kontrol kualitas.", "Berintegritas Tinggi: Jujur, lugas, dan memegang teguh komitmen serta aturan yang berlaku.", "Logika Praktis: Mampu membuat keputusan yang masuk akal berdasarkan fakta dan pengalaman masa lalu."],
+                development: ["Cenderung Kaku: Sulit beradaptasi dengan perubahan mendadak atau cara-cara baru yang belum teruji.", "Kurang Peka pada Emosi: Terkadang bisa terlihat tidak sensitif atau terlalu kritis karena fokus pada logika dan tugas.", "Menyalahkan Diri Sendiri: Cenderung menanggung semua beban dan menyalahkan diri sendiri jika ada yang salah.", "Enggan Menerima Ide Abstrak: Lebih percaya pada apa yang nyata dan terbukti daripada teori atau kemungkinan baru."],
+                leadership: "Sebagai pemimpin, ISTJ adalah manajer yang stabil dan konsisten. Mereka memimpin dengan teladan, menetapkan standar operasional yang jelas, dan memastikan prosedur diikuti dengan cermat. Untuk posisi Kepala Toko, mereka akan unggul dalam manajemen inventaris, penjadwalan staf, pelaporan keuangan, dan memastikan kepatuhan penuh terhadap standar perusahaan.",
+                profession: "Manajer, Akuntan, Polisi, Hakim, Auditor, System Analyst, Manajer Logistik."
+            },
+            ISFJ: {
+                description: "Dikenal sebagai 'Sang Pelindung', mereka sangat berdedikasi, hangat, dan bertanggung jawab. ISFJ sangat peka terhadap kebutuhan orang lain dan bekerja tanpa lelah untuk memenuhi kewajiban mereka. Mereka menciptakan lingkungan yang harmonis dan teratur, didorong oleh keinginan kuat untuk melayani.",
+                strengths: ["Sangat Suportif dan Peduli: Sangat baik dalam memahami kebutuhan pelanggan dan staf, menciptakan loyalitas.", "Dapat Diandalkan dan Teliti: Melaksanakan tugas dengan cermat dan memastikan tidak ada yang terlewat.", "Praktis dan Terorganisir: Mampu mengelola operasional harian toko dengan efisien dan rapi.", "Menciptakan Keharmonisan: Berusaha keras untuk menjaga lingkungan kerja yang positif dan kolaboratif."],
+                development: ["Sulit Mengatakan 'Tidak': Mungkin terlalu banyak menanggung beban untuk membantu orang lain, yang bisa menyebabkan keleahan.", "Menghindari Konflik: Cenderung menghindari konfrontasi yang diperlukan untuk menyelesaikan masalah.", "Terlalu Mengambil Hati Kritik: Kritik terhadap pekerjaan mereka bisa dianggap sebagai serangan pribadi.", "Ragu-ragu terhadap Perubahan: Lebih suka metode yang sudah dikenal dan mungkin menolak inovasi."],
+                leadership: "ISFJ memimpin dengan pelayanan. Sebagai Kepala Toko, mereka akan sangat fokus pada kepuasan pelanggan dan kesejahteraan tim. Mereka akan membangun tim yang solid dan setia, serta memastikan setiap pelanggan merasa dihargai. Mereka menciptakan suasana toko yang ramah dan menyambut.",
+                profession: "Perawat, Guru, Administratif, Pekerja Sosial, Manajer Layanan Pelanggan, HR."
+            },
+            INFJ: {
+                description: "Seorang idealis yang pendiam namun sangat inspiratif dan tak kenal lelah. INFJ memiliki pemahaman yang mendalam tentang motivasi manusia dan didorong oleh visi untuk membuat dunia menjadi tempat yang lebih baik. Mereka kreatif, berprinsip, dan seringkali menjadi agen perubahan.",
+                strengths: ["Visioner dan Inspiratif: Mampu melihat potensi dalam diri orang lain dan menginspirasi tim untuk mencapai tujuan bersama.", "Sangat Berempati: Dapat memahami dan merasakan apa yang dibutuhkan oleh pelanggan dan staf pada tingkat yang lebih dalam.", "Tegas dan Berprinsip: Berpegang teguh pada nilai-nilai dan dapat membuat keputusan sulit demi kebaikan yang lebih besar.", "Kreatif dalam Memecahkan Masalah: Menemukan solusi inovatif untuk tantangan yang kompleks."],
+                development: ["Bisa Menjadi Terlalu Perfeksionis: Menetapkan standar yang sangat tinggi untuk diri sendiri dan orang lain, yang bisa menimbulkan stres.", "Menghindari Konflik untuk Menjaga Harmoni: Mungkin mengorbankan umpan balik yang jujur demi menjaga perasaan.", "Mudah Mengalami Kelelahan Emosional: Menyerap emosi orang-orang di sekitar mereka, yang bisa sangat menguras energi.", "Sulit Menerima Kritik: Karena pekerjaan mereka sangat terkait dengan nilai-nilai pribadi, kritik bisa terasa sangat personal."],
+                leadership: "INFJ memimpin dengan visi dan integritas. Sebagai Kepala Toko, mereka akan fokus pada pengembangan potensi tim dan menciptakan budaya kerja yang positif dan bermakna. Mereka akan mendorong standar layanan pelanggan yang luar biasa yang didasarkan pada hubungan otentik.",
+                profession: "Konselor, Psikolog, Penulis, Guru, Pekerja Sosial, Seniman, Manajer Nirlaba."
+            },
+            INTJ: {
+                description: "Pemikir strategis dengan rencana untuk segala hal. INTJ adalah individu yang analitis, logis, dan sangat mandiri. Mereka memiliki dorongan kuat untuk menyempurnakan sistem dan proses, selalu mencari cara baru untuk meningkatkan efisiensi dan pengetahuan.",
+                strengths: ["Berpikir Strategis Jangka Panjang: Mampu merencanakan pertumbuhan toko dan mengantisipasi tren pasar.", "Sangat Logis dan Analitis: Unggul dalam menganalisis data penjualan, mengelola anggaran, dan mengoptimalkan inventaris.", "Mandiri dan Percaya Diri: Mampu membuat keputusan sulit secara objektif tanpa dipengaruhi oleh emosi.", "Dorongan untuk Perbaikan: Selalu mencari cara untuk membuat operasional toko lebih efisien dan efektif."],
+                development: ["Bisa Terlihat Arogan atau Tidak Sabaran: Mungkin meremehkan orang-orang yang tidak secepat mereka dalam memahami konsep.", "Kurang Memperhatikan Aspek Emosional: Cenderung mengabaikan 'sentuhan pribadi' yang penting dalam layanan pelanggan dan manajemen tim.", "Perfeksionis yang Berlebihan: Bisa terjebak dalam analisis dan perencanaan, menunda tindakan nyata.", "Menolak Struktur dan Aturan yang Ada: Tidak suka dibatasi oleh aturan jika mereka merasa ada cara yang lebih baik."],
+                leadership: "INTJ adalah pemimpin visioner yang fokus pada efisiensi dan kompetensi. Sebagai Kepala Toko, mereka akan unggul dalam mengoptimalkan tata letak toko, menganalisis metrik kinerja, dan menerapkan strategi inovatif untuk meningkatkan keuntungan. Mereka membangun tim yang kompeten dan menghargai kemandirian.",
+                profession: "Ilmuwan, Insinyur, Pengacara, Konsultan, Perencana Strategis, Manajer Proyek."
+            },
+            ISTP: { 
+                description: "Pragmatis dan logis, ISTP adalah pemecah masalah yang handal. Mereka berkembang dalam situasi yang membutuhkan tindakan cepat dan solusi praktis. Mereka adalah pengamat yang tajam, mampu menganalisis masalah dengan tenang dan menemukan solusi yang efisien.",
+                strengths: ["Sangat Adaptif: Mudah menyesuaikan diri dengan situasi baru dan tidak panik di bawah tekanan.", "Efisien dalam Krisis: Mampu tetap tenang dan logis untuk menemukan solusi tercepat saat terjadi masalah.", "Keterampilan Praktis: Sangat baik dalam pekerjaan yang membutuhkan tangan terampil dan pemahaman mekanis.", "Realistis: Berpijak pada kenyataan dan tidak mudah terpengaruh oleh teori yang tidak praktis."], 
+                development: ["Kurang Peka: Bisa secara tidak sengaja mengabaikan perasaan orang lain karena fokus pada fakta.", "Sulit Berkomitmen Jangka Panjang: Cenderung mudah bosan dengan rutinitas dan lebih menyukai tantangan baru.", "Cenderung Tertutup: Tidak suka berbagi pemikiran atau perasaan pribadi mereka.", "Mengambil Risiko yang Tidak Perlu: Terkadang bertindak impulsif tanpa mempertimbangkan konsekuensi jangka panjang."], 
+                leadership: "ISTP memimpin dengan contoh praktis. Sebagai Kepala Toko, mereka akan menjadi orang yang turun tangan langsung untuk memperbaiki masalah operasional. Mereka memberikan kebebasan kepada tim mereka untuk bekerja, selama hasilnya efisien dan efektif.", 
+                profession: "Teknisi, Pilot, Ahli Forensik, Programmer, Insinyur, Entrepreneur." 
+            },
+            ISFP: { 
+                description: "Artistik, menawan, dan cinta damai, ISFP hidup di saat ini dan menikmati lingkungan mereka dengan kelima indera mereka. Mereka fleksibel, spontan, dan biasanya pendiam, tetapi memiliki kehangatan batin dan antusiasme yang mereka bagikan dengan orang-orang terdekat.",
+                strengths: ["Sangat Peka Estetika: Mampu menciptakan lingkungan toko yang menarik secara visual dan nyaman.", "Fleksibel dan Spontan: Mudah beradaptasi dengan perubahan kebutuhan pelanggan atau dinamika tim.", "Setia dan Peduli: Membangun hubungan pribadi yang kuat dengan staf dan pelanggan setia.", "Praktis dan Realistis: Meskipun artistik, mereka tetap berpijak pada apa yang bisa dilakukan saat ini."], 
+                development: ["Sangat Menghindari Konflik: Akan melakukan apa saja untuk menghindari konfrontasi, bahkan jika itu berarti masalah tidak terselesaikan.", "Tidak Suka Diatur dengan Ketat: Menolak struktur, jadwal, dan aturan yang kaku.", "Sulit Menerima Kritik: Sangat sensitif dan dapat menganggap umpan balik sebagai serangan pribadi.", "Kurang dalam Perencanaan Jangka Panjang: Fokus pada saat ini membuat mereka sulit untuk merencanakan masa depan."], 
+                leadership: "ISFP memimpin dengan menciptakan lingkungan yang positif dan mendukung. Sebagai Kepala Toko, mereka akan fokus pada pengalaman pelanggan, memastikan suasana toko menyenangkan, dan membangun tim yang merasa dihargai secara pribadi.", 
+                profession: "Seniman, Desainer, Pekerja Sosial, Konselor, Guru, Chef, Aktor." 
+            },
+            INFP: { 
+                description: "Idealis yang puitis, baik hati, dan altruistik, selalu mencari kebaikan bahkan pada orang dan peristiwa terburuk sekalipun. INFP didorong oleh nilai-nilai internal yang kuat dan keinginan untuk membantu orang lain mencapai potensi mereka.",
+                strengths: ["Sangat Berempati: Mampu memahami dan terhubung dengan perasaan staf dan pelanggan secara mendalam.", "Kreatif dan Imajinatif: Menghadirkan ide-ide baru untuk meningkatkan pengalaman di toko.", "Berprinsip dan Setia: Sangat berdedikasi pada nilai-nilai mereka dan pada orang-orang yang mereka pimpin.", "Komunikator yang Menginspirasi: Mampu mengkomunikasikan visi dan nilai-nilai dengan cara yang menyentuh hati."], 
+                development: ["Bisa Menjadi Tidak Praktis: Terkadang ide-ide mereka terlalu idealis dan sulit untuk diimplementasikan.", "Terlalu Kritis pada Diri Sendiri: Menetapkan standar moral yang sangat tinggi dan bisa kecewa jika kenyataan tidak sesuai.", "Sangat Menghindari Konflik: Tidak suka berurusan dengan data yang keras atau membuat keputusan yang mungkin menyakiti perasaan seseorang.", "Sulit Menerima Kenyataan Pahit: Bisa merasa kewalahan oleh aspek-aspek bisnis yang keras seperti pemecatan atau persaingan."], 
+                leadership: "INFP memimpin dengan nilai-nilai dan inspirasi. Sebagai Kepala Toko, mereka akan membangun budaya perusahaan yang kuat yang berpusat pada pelayanan dan pengembangan diri. Mereka memotivasi tim dengan tujuan yang lebih besar daripada sekadar penjualan.", 
+                profession: "Penulis, Konselor, Psikolog, Pengajar, Seniman, Pekerja Sosial." 
+            },
+            INTP: { 
+                description: "Penemu yang inovatif dengan dahaga yang tak terpuaskan akan pengetahuan. INTP adalah pemikir logis yang menghabiskan banyak waktu dalam pikiran mereka sendiri, mengeksplorasi konsep, menganalisis teori, dan menciptakan solusi yang cerdik.",
+                strengths: ["Sangat Logis dan Analitis: Mampu menganalisis masalah kompleks dan menemukan akar penyebabnya.", "Imajinatif dan Orisinal: Menghasilkan solusi dan ide-ide yang tidak terpikirkan oleh orang lain.", "Objektif dan Terbuka: Bersedia mendengarkan semua sudut pandang untuk menemukan kebenaran.", "Tenang dan Fleksibel: Tidak mudah stres dan dapat beradaptasi dengan informasi baru."], 
+                development: ["Kurang Peka secara Sosial: Bisa terlihat acuh tak acuh atau jauh karena mereka hidup di dalam pikiran mereka.", "Sering Menunda-nunda: Mungkin menghabiskan terlalu banyak waktu untuk menganalisis dan tidak cukup waktu untuk bertindak.", "Tidak Suka Aturan dan Birokrasi: Merasa terkekang oleh prosedur standar atau tugas-tugas administratif.", "Bisa Menjadi Argumentatif: Suka menunjukkan kelemahan dalam logika orang lain, yang bisa terlihat seperti kritik."], 
+                leadership: "INTP memimpin dengan mendorong inovasi dan kompetensi. Sebagai Kepala Toko, mereka akan unggul dalam menganalisis data untuk meningkatkan efisiensi, tetapi mungkin perlu bantuan dalam mengelola aspek antarpribadi tim. Mereka menghargai kecerdasan dan otonomi.", 
+                profession: "Ilmuwan, Programmer, Analis Sistem, Pengacara, Profesor, Peneliti." 
+            },
+            ESTP: { 
+                description: "Cerdas, energik, dan sangat perseptif, ESTP benar-benar menikmati hidup di ujung tanduk. Mereka adalah orang-orang yang berorientasi pada tindakan, lebih suka terjun langsung dan belajar sambil berjalan daripada menghabiskan waktu dengan teori.",
+                strengths: ["Berani dan Berorientasi Tindakan: Tidak ragu untuk mengambil risiko dan membuat keputusan cepat.", "Sangat Jeli: Mampu memperhatikan detail-detail kecil di lingkungan mereka dan bereaksi dengan cepat.", "Persuasif dan Menawan: Pandai bernegosiasi dan memengaruhi orang lain.", "Fleksibel dan Spontan: Mudah beradaptasi dengan situasi apa pun yang muncul."], 
+                development: ["Tidak Sabaran: Ingin melihat hasil segera dan bisa frustrasi dengan proses yang lambat.", "Kurang Terstruktur: Tidak suka perencanaan jangka panjang dan bisa mengabaikan aturan.", "Cenderung Mengambil Risiko Berlebihan: Antusiasme mereka bisa membawa mereka ke dalam situasi yang berisiko.", "Bisa Menjadi Tidak Sensitif: Mungkin memprioritaskan logika dan kesenangan di atas perasaan orang lain."], 
+                leadership: "ESTP adalah pemimpin yang energik dan langsung. Sebagai Kepala Toko, mereka akan berada di lantai penjualan, berinteraksi dengan pelanggan, dan memotivasi tim dengan energi mereka. Mereka hebat dalam situasi krisis dan penjualan yang bergerak cepat.", 
+                profession: "Marketing, Sales, Polisi, Entrepreneur, Pialang Saham, Paramedis." 
+            },
+            ESFP: { 
+                description: "Spontan, energik, dan antusias – hidup tidak pernah membosankan di sekitar mereka. ESFP adalah entertainer sejati, suka menjadi pusat perhatian dan memastikan semua orang bersenang-senang. Mereka praktis, jeli, dan sangat sosial.",
+                strengths: ["Sangat Sosial dan Ramah: Mampu membuat pelanggan merasa diterima dan membangun semangat tim yang positif.", "Menghibur dan Antusias: Menciptakan suasana toko yang hidup dan menyenangkan.", "Praktis dan Jeli: Mampu melihat apa yang perlu dilakukan saat ini untuk meningkatkan pengalaman pelanggan.", "Adaptif dan Fleksibel: Mudah mengikuti arus dan menangani situasi tak terduga dengan baik."], 
+                development: ["Sulit Fokus pada Jangka Panjang: Cenderung menghindari perencanaan dan tugas-tugas administratif yang membosankan.", "Sangat Menghindari Konflik: Lebih suka menjaga hal-hal tetap ringan dan mungkin menghindari percakapan sulit.", "Mudah Bosan: Membutuhkan rangsangan terus-menerus dan bisa kehilangan minat pada rutinitas.", "Sensitif terhadap Kritik: Meskipun terlihat percaya diri, mereka sangat peduli dengan apa yang orang lain pikirkan."], 
+                leadership: "ESFP memimpin dengan menciptakan pengalaman. Sebagai Kepala Toko, mereka akan fokus pada layanan pelanggan yang luar biasa, acara di dalam toko, dan membangun tim yang terasa seperti keluarga. Mereka adalah wajah toko yang sempurna.", 
+                profession: "Entertainer, Seniman, Marketing, Konselor, Desainer, Pemandu Wisata." 
+            },
+            ENFP: { 
+                description: "Semangat bebas yang antusias, kreatif, dan mudah bergaul, yang selalu dapat menemukan alasan untuk tersenyum. ENFP adalah komunikator yang hebat, mampu terhubung dengan orang lain melalui antusiasme dan wawasan mereka yang tajam.",
+                strengths: ["Karismatik dan Antusias: Mampu memotivasi dan menginspirasi tim dan pelanggan dengan energi positif mereka.", "Sangat Kreatif: Selalu memiliki ide-ide baru untuk pemasaran, promosi, dan tata letak toko.", "Komunikator yang Hebat: Pandai memahami orang lain dan mengartikulasikan ide-ide dengan cara yang menarik.", "Fleksibel dan Mudah Beradaptasi: Terbuka terhadap kemungkinan baru dan tidak takut mencoba hal-hal baru."], 
+                development: ["Cenderung Tidak Terorganisir: Bisa kesulitan dengan detail, administrasi, dan tindak lanjut.", "Mudah Bosan dan Kehilangan Fokus: Mungkin memulai banyak proyek tetapi kesulitan menyelesaikannya.", "Terlalu Banyak Berjanji: Dalam antusiasme mereka, mereka mungkin setuju untuk melakukan lebih dari yang bisa mereka tangani.", "Sangat Menghindari Konflik: Tidak suka membuat keputusan yang akan membuat orang lain tidak bahagia."], 
+                leadership: "ENFP memimpin dengan inspirasi dan kreativitas. Sebagai Kepala Toko, mereka akan menjadi sumber ide dan energi yang tak ada habisnya. Mereka membangun budaya kerja yang positif di mana setiap orang merasa didorong untuk menjadi kreatif dan berkontribusi.", 
+                profession: "Motivator, Reporter, Konselor, Psikolog, Pengajar, Aktor." 
+            },
+            ENTP: { 
+                description: "Pemikir yang cerdas dan berani yang tidak bisa menolak tantangan intelektual. ENTP suka berdebat, bukan karena mereka agresif, tetapi karena itu adalah cara mereka mengeksplorasi ide dari setiap sudut. Mereka cepat, cerdik, dan inovatif.",
+                strengths: ["Sangat Inovatif: Selalu melihat cara untuk menantang status quo dan meningkatkan sistem yang ada.", "Pandai Berdebat dan Bernegosiasi: Mampu melihat semua sisi argumen dan meyakinkan orang lain.", "Berpengetahuan Luas dan Cepat Belajar: Dapat dengan cepat memahami konsep-konsep baru dan menerapkannya.", "Karismatik dan Energik: Antusiasme mereka terhadap ide-ide baru bisa menular."], 
+                development: ["Bisa Menjadi Argumentatif: Terkadang berdebat hanya untuk kesenangan, yang bisa melelahkan orang lain.", "Tidak Fokus pada Detail: Lebih tertarik pada ide besar daripada implementasi sehari-hari.", "Tidak Sabaran dengan Orang yang Lebih Lambat: Bisa frustrasi dengan orang yang tidak bisa mengikuti alur pikiran mereka.", "Menolak Aturan dan Struktur: Tidak suka diberitahu apa yang harus dilakukan dan lebih suka menemukan cara mereka sendiri."], 
+                leadership: "ENTP memimpin dengan menantang tim mereka untuk berpikir. Sebagai Kepala Toko, mereka akan terus-menerus mendorong inovasi dalam proses penjualan, pemasaran, dan layanan. Mereka menciptakan lingkungan di mana ide-ide baru didorong dan diperdebatkan.", 
+                profession: "Pengacara, Konsultan, Ilmuwan, Aktor, Marketing, Entrepreneur." 
+            },
+            ESTJ: {
+                description: "Administrator yang luar biasa, tak tertandingi dalam mengelola berbagai hal atau orang. ESTJ adalah individu yang praktis, realistis, dan berpegang pada fakta. Mereka memiliki dorongan alami untuk memimpin dan memastikan segala sesuatu berjalan sesuai aturan dan jadwal.",
+                strengths: ["Kepemimpinan yang Kuat dan Tegas: Mampu mengambil alih, mendelegasikan tugas dengan jelas, dan memotivasi tim untuk mencapai hasil.", "Sangat Terorganisir dan Efisien: Ahli dalam membuat rencana, sistem, dan jadwal yang memastikan operasional berjalan lancar.", "Berdedikasi Tinggi dan Andal: Bekerja keras dan tidak akan berhenti sampai pekerjaan selesai sesuai standar.", "Jujur dan Langsung: Memberikan umpan balik yang jelas dan tidak bertele-tele untuk perbaikan kinerja."],
+                development: ["Tidak Fleksibel dan Keras Kepala: Percaya bahwa cara mereka adalah yang terbaik dan sulit menerima sudut pandang atau inovasi baru.", "Kesulitan Mengungkapkan Apresiasi: Mungkin fokus pada apa yang salah daripada mengakui apa yang sudah berjalan dengan baik.", "Cenderung Menghakimi: Cepat menilai sesuatu atau seseorang yang tidak sesuai dengan standar dan aturan mereka.", "Bisa Menjadi Terlalu Dominan: Gaya kepemimpinan mereka bisa terasa mengintimidasi bagi beberapa anggota tim."],
+                leadership: "ESTJ adalah Kepala Toko yang berorientasi pada hasil dan efisiensi. Mereka akan menetapkan target penjualan yang jelas, mengelola staf dengan disiplin, dan memastikan toko berjalan seperti mesin yang diminyaki dengan baik. Mereka unggul dalam operasional, penegakan aturan, dan pencapaian target yang terukur.",
+                profession: "Militer, Manajer, Polisi, Hakim, Pengacara, Sales, Akuntan, Eksekutif Bisnis."
+            },
+            ESFJ: { 
+                description: "Sangat peduli, sosial, dan populer, ESFJ adalah 'Sang Konsul' yang selalu ingin membantu. Mereka adalah pilar komunitas, mengambil peran dalam mengatur acara dan memastikan semua orang bahagia dan diperhatikan. Mereka teliti dan setia.",
+                strengths: ["Membangun Keharmonisan: Sangat baik dalam menciptakan lingkungan kerja yang positif dan kohesif.", "Sangat Terorganisir untuk Orang Lain: Ahli dalam mengatur jadwal dan tugas untuk memastikan kebutuhan tim terpenuhi.", "Praktis dan Dapat Diandalkan: Melaksanakan tugas dengan cermat dan selalu siap membantu.", "Peka terhadap Kebutuhan Orang Lain: Secara alami memperhatikan kapan seseorang membutuhkan bantuan atau dukungan."], 
+                development: ["Terlalu Bergantung pada Persetujuan: Nilai diri mereka sangat terikat pada apa yang orang lain pikirkan tentang mereka.", "Sangat Sensitif terhadap Kritik: Sulit menerima umpan balik negatif, bahkan jika itu konstruktif.", "Menghindari Konflik: Akan mengorbankan kebutuhan mereka sendiri atau kebenaran untuk menjaga kedamaian.", "Enggan Berinovasi: Lebih suka mengikuti metode yang telah terbukti berhasil daripada mencoba sesuatu yang baru."], 
+                leadership: "ESFJ memimpin dengan dukungan dan perhatian. Sebagai Kepala Toko, mereka akan menjadi jantung tim, memastikan semua orang merasa menjadi bagian dari keluarga. Mereka unggul dalam layanan pelanggan dan membangun loyalitas baik dari staf maupun pelanggan.", 
+                profession: "Perawat, Manajer HR, Perencana Acara, Guru, Pekerja Sosial, Administratif." 
+            },
+            ENFJ: { 
+                description: "Protagonis yang karismatik dan menginspirasi, mampu memikat pendengarnya. ENFJ adalah pemimpin alami, penuh gairah dan karisma. Mereka sering menjadi panutan, menjangkau dan menginspirasi orang lain untuk mencapai dan melakukan kebaikan di dunia.",
+                strengths: ["Menginspirasi dan Memotivasi: Mampu melihat potensi pada orang lain dan membantu mereka mencapainya.", "Sangat Berempati: Secara tulus peduli pada kesejahteraan tim mereka dan akan bekerja keras untuk membantu mereka.", "Komunikator yang Luar Biasa: Pandai mengartikulasikan visi dan menyatukan orang-orang di belakang tujuan bersama.", "Terorganisir dan Andal: Mampu mengubah visi menjadi rencana yang dapat ditindaklanjuti."], 
+                development: ["Bisa Menjadi Terlalu Idealis: Terkadang visi mereka tidak berpijak pada kenyataan.", "Sangat Sensitif terhadap Kritik: Bisa merasa sangat terluka oleh umpan balik negatif.", "Cenderung Mengabaikan Kebutuhan Diri Sendiri: Terlalu fokus pada membantu orang lain sehingga mereka lupa merawat diri sendiri.", "Bisa Menjadi Terlalu Mengontrol: Keinginan mereka untuk membantu bisa berubah menjadi keinginan untuk mengarahkan setiap aspek kehidupan orang lain."], 
+                leadership: "ENFJ memimpin dengan karisma dan pengembangan. Sebagai Kepala Toko, mereka akan menjadi mentor bagi tim mereka, mendorong setiap individu untuk tumbuh. Mereka menciptakan budaya kerja yang positif dan berorientasi pada tujuan yang lebih tinggi.", 
+                profession: "Konsultan, Pengajar, Manajer SDM, Psikolog, Diplomat, Pemimpin Nirlaba." 
+            },
+            ENTJ: {
+                description: "Pemimpin yang berani, imajinatif, dan berkemauan kuat, selalu menemukan atau menciptakan cara. ENTJ adalah visioner yang didorong untuk mengubah ide menjadi kenyataan. Mereka cepat melihat inefisiensi dan menyusun solusi strategis, serta senang memimpin tim menuju tujuan yang ambisius.",
+                strengths: ["Pemimpin Visioner dan Karismatik: Mampu mengartikulasikan visi yang menarik dan memotivasi tim untuk mencapainya.", "Sangat Strategis dan Logis: Unggul dalam perencanaan bisnis, analisis kompetitif, dan menemukan peluang pertumbuhan.", "Tegas dan Percaya Diri: Tidak ragu untuk mengambil keputusan sulit dan memimpin dari depan.", "Efisien dan Berorientasi pada Tujuan: Fokus pada hasil akhir dan akan mendorong tim untuk mencapai dan melampaui target."],
+                development: ["Bisa Menjadi Tidak Sabaran dan Dominan: Mungkin mengabaikan masukan dari orang lain dan terlihat arogan.", "Tidak Peka terhadap Kebutuhan Emosional Tim: Fokus pada tujuan dapat membuat mereka mengabaikan kesejahteraan emosional staf.", "Sulit Menerima Kegagalan: Sangat kritis terhadap diri sendiri dan orang lain ketika tujuan tidak tercapai.", "Cenderung Berdebat untuk Menang: Bisa mengubah setiap diskusi menjadi sebuah kompetisi, yang dapat melelahkan tim."],
+                leadership: "ENTJ adalah Kepala Toko yang transformasional. Mereka tidak hanya akan mengelola operasional harian, tetapi juga akan terus-menerus mencari cara untuk mengembangkan bisnis, melampaui pesaing, dan melatih tim untuk menjadi yang terbaik. Mereka adalah pemimpin yang menuntut keunggulan dan mendorong inovasi.",
+                profession: "Eksekutif Bisnis, Pengacara, Konsultan, Pemimpin Organisasi, Manajer Proyek, Entrepreneur."
+            }
+        };
+
+        let currentQuestionIndex = 0;
+        let answers = new Array(questions.length).fill(null);
+        let userData = {};
+
+        // Elemen DOM
+        const welcomePage = document.getElementById('welcome-page');
+        const testPage = document.getElementById('test-page');
+        const thankYouPage = document.getElementById('thank-you-page');
+        const dataDiriForm = document.getElementById('data-diri-form');
+        const startBtn = document.getElementById('start-btn');
+        const persetujuanCheckbox = document.getElementById('persetujuan');
+        const namaInput = document.getElementById('nama');
+        const emailInput = document.getElementById('email');
+        const posisiInput = document.getElementById('posisi');
+
+        const questionContainer = document.getElementById('question-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const finishBtn = document.getElementById('finish-btn');
+        const finishBtnText = document.getElementById('finish-btn-text');
+        const finishSpinner = document.getElementById('finish-spinner');
+        const progressBar = document.getElementById('progress-bar');
+        const validationMessage = document.getElementById('validation-message');
+        
+        // Validasi form data diri
+        function validateForm() {
+            startBtn.disabled = !(namaInput.value && emailInput.value && posisiInput.value && persetujuanCheckbox.checked);
+        }
+        dataDiriForm.addEventListener('input', validateForm);
+        persetujuanCheckbox.addEventListener('change', validateForm);
+
+        // Memulai tes
+        dataDiriForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            userData = {
+                nama: namaInput.value,
+                email: emailInput.value,
+                posisi: posisiInput.value,
+            };
+            welcomePage.classList.add('hidden');
+            testPage.classList.remove('hidden');
+            showQuestion(currentQuestionIndex);
+        });
+
+        // Menampilkan pertanyaan
+        function showQuestion(index) {
+            const q = questions[index];
+            questionContainer.innerHTML = `
+                <p class="text-lg font-medium">${index + 1}. ${q.question}</p>
+                <div class="mt-4 space-y-3">
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="answer" value="a" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" ${answers[index] === 'a' ? 'checked' : ''}>
+                        <span class="ml-3 text-gray-700">${q.a}</span>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="answer" value="b" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" ${answers[index] === 'b' ? 'checked' : ''}>
+                        <span class="ml-3 text-gray-700">${q.b}</span>
+                    </label>
+                </div>
+            `;
+            
+            const radioButtons = questionContainer.querySelectorAll('input[name="answer"]');
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    answers[index] = e.target.value;
+                    validationMessage.classList.add('hidden'); // Sembunyikan pesan error saat user menjawab
+                    updateProgress();
+                    // Otomatis ke pertanyaan berikutnya setelah memilih
+                    setTimeout(() => {
+                        if (currentQuestionIndex < questions.length - 1) {
+                            currentQuestionIndex++;
+                            showQuestion(currentQuestionIndex);
+                        }
+                    }, 300);
+                });
+            });
+
+            updateNavigation();
+        }
+
+        // Update navigasi
+        function updateNavigation() {
+            prevBtn.style.display = currentQuestionIndex === 0 ? 'none' : 'inline-block';
+            nextBtn.style.display = currentQuestionIndex === questions.length - 1 ? 'none' : 'inline-block';
+            finishBtn.style.display = currentQuestionIndex === questions.length - 1 ? 'inline-block' : 'none';
+        }
+        
+        // Update progress bar
+        function updateProgress() {
+            const answeredCount = answers.filter(a => a !== null).length;
+            const progress = (answeredCount / questions.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        // Tombol navigasi
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                showQuestion(currentQuestionIndex);
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                showQuestion(currentQuestionIndex);
+            }
+        });
+
+        finishBtn.addEventListener('click', () => {
+            if (answers.includes(null)) {
+                validationMessage.textContent = 'Harap jawab semua pertanyaan sebelum menyelesaikan tes.';
+                validationMessage.classList.remove('hidden');
+                return;
+            }
+            processAndSendResults();
+        });
+
+        // Proses hasil dan kirim email
+        async function processAndSendResults() {
+            // Tampilkan loading spinner
+            finishBtn.disabled = true;
+            finishBtnText.textContent = 'Memproses...';
+            finishSpinner.classList.remove('hidden');
+
+            // 1. Kalkulasi hasil
+            calculateResult();
+            
+            // 2. Kirim email dengan PDF
+            try {
+                await sendEmailWithPDF();
+                // 3. Tampilkan halaman terima kasih
+                testPage.classList.add('hidden');
+                thankYouPage.classList.remove('hidden');
+            } catch (error) {
+                console.error("Gagal mengirim email:", error);
+                validationMessage.textContent = 'Gagal mengirim hasil. Silakan coba lagi atau hubungi administrator.';
+                validationMessage.classList.remove('hidden');
+                // Kembalikan tombol ke state normal
+                finishBtn.disabled = false;
+                finishBtnText.textContent = 'Selesaikan Tes';
+                finishSpinner.classList.add('hidden');
+            }
+        }
+
+        // Kalkulasi hasil
+        function calculateResult() {
+            let scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+
+            answers.forEach((answer, index) => {
+                const questionNumber = index + 1;
+                
+                if (answerKey.E.includes(questionNumber)) {
+                    if (answer === answerKeyType[questionNumber]) scores.E++; else scores.I++;
+                } else if (answerKey.S.includes(questionNumber)) {
+                    if (answer === answerKeyType[questionNumber]) scores.S++; else scores.N++;
+                } else if (answerKey.T.includes(questionNumber)) {
+                    if (answer === answerKeyType[questionNumber]) scores.T++; else scores.F++;
+                } else if (answerKey.J.includes(questionNumber)) {
+                    if (answer === answerKeyType[questionNumber]) scores.J++; else scores.P++;
+                }
+            });
+
+            let resultType = '';
+            resultType += scores.E >= scores.I ? 'E' : 'I';
+            resultType += scores.S >= scores.N ? 'S' : 'N';
+            resultType += scores.T >= scores.F ? 'T' : 'F';
+            resultType += scores.J >= scores.P ? 'J' : 'P';
+            
+            userData.resultType = resultType;
+            userData.scores = scores;
+        }
+
+        // Fungsi untuk membuat HTML laporan hasil (untuk PDF)
+        function generateResultHTML(type) {
+            const resultData = allInterpretations[type];
+            if (!resultData) return '<h1>Hasil tidak ditemukan</h1>';
+
+            const strengthsHTML = resultData.strengths.map(item => `<li>${item}</li>`).join('');
+            const developmentHTML = resultData.development.map(item => `<li>${item}</li>`).join('');
+
+            return `
+                <div style="font-family: 'Inter', sans-serif; padding: 2rem; color: #374151;">
+                    <div style="text-align: center;">
+                        <h2 style="font-size: 1.5rem; font-weight: 700;">Analisis Detail Hasil Tes Kepribadian</h2>
+                        <p style="font-size: 1.125rem; margin-top: 1rem;">Nama: <span style="font-weight: 600;">${userData.nama}</span></p>
+                        <p style="font-size: 1.125rem;">Tipe Kepribadian:</p>
+                        <p style="font-size: 2.25rem; font-weight: 700; color: #4f46e5; margin: 1rem 0;">${type}</p>
+                    </div>
+                    <div style="margin-top: 2rem;">
+                        <h3 style="font-size: 1.25rem; font-weight: 600; border-bottom: 2px solid #c7d2fe; padding-bottom: 0.5rem;">Deskripsi Karakter</h3>
+                        <p style="margin-top: 0.75rem; line-height: 1.625;">${resultData.description}</p>
+                    </div>
+                    <div style="margin-top: 2rem;">
+                        <h3 style="font-size: 1.25rem; font-weight: 600; border-bottom: 2px solid #c7d2fe; padding-bottom: 0.5rem;">Kekuatan Utama</h3>
+                        <ul style="margin-top: 0.75rem; list-style-position: inside; padding-left: 1rem;">${strengthsHTML}</ul>
+                    </div>
+                    <div style="margin-top: 2rem;">
+                        <h3 style="font-size: 1.25rem; font-weight: 600; border-bottom: 2px solid #c7d2fe; padding-bottom: 0.5rem;">Kelemahan & Area Pengembangan</h3>
+                        <ul style="margin-top: 0.75rem; list-style-position: inside; padding-left: 1rem;">${developmentHTML}</ul>
+                    </div>
+                    <div style="margin-top: 2rem;">
+                        <h3 style="font-size: 1.25rem; font-weight: 600; border-bottom: 2px solid #c7d2fe; padding-bottom: 0.5rem;">Gaya Kepemimpinan & Kontribusi di Tempat Kerja</h3>
+                        <p style="margin-top: 0.75rem; line-height: 1.625;">${resultData.leadership}</p>
+                    </div>
+                    <div style="margin-top: 2rem;">
+                        <h3 style="font-size: 1.25rem; font-weight: 600; border-bottom: 2px solid #c7d2fe; padding-bottom: 0.5rem;">Saran Profesi</h3>
+                        <p style="margin-top: 0.75rem;">${resultData.profession}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Fungsi untuk mengirim email
+        async function sendEmailWithPDF() {
+            const { jsPDF } = window.jspdf;
+            
+            // Buat elemen sementara untuk dirender oleh html2canvas
+            const reportContainer = document.createElement('div');
+            reportContainer.style.position = 'absolute';
+            reportContainer.style.left = '-9999px'; // Posisikan di luar layar
+            reportContainer.style.width = '800px'; // Lebar yang cukup untuk konten
+            reportContainer.innerHTML = generateResultHTML(userData.resultType);
+            document.body.appendChild(reportContainer);
+
+            try {
+                // PERBAIKAN: URL Anda sudah dimasukkan secara otomatis.
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbx0VvKLGEVRy4auxA-D6uwH40KNR3gOrv4K9huYJowVZSQrLoGZcaRyV0QM-VvIz9zH/exec';
+                
+                const canvas = await html2canvas(reportContainer, { scale: 2 });
+                
+                const imgData = canvas.toDataURL('image/png');
+                
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = canvas.width;
+                const imgHeight = canvas.height;
+                const ratio = imgWidth / imgHeight;
+                let widthInPdf = pdfWidth - 20;
+                let heightInPdf = widthInPdf / ratio;
+
+                if (heightInPdf > pdfHeight - 20) {
+                    heightInPdf = pdfHeight - 20;
+                    widthInPdf = heightInPdf * ratio;
+                }
+                
+                const xOffset = (pdfWidth - widthInPdf) / 2;
+                const yOffset = 10;
+
+                pdf.addImage(imgData, 'PNG', xOffset, yOffset, widthInPdf, heightInPdf);
+                const pdfBase64 = pdf.output('datauristring').split(',')[1];
+
+                const payload = {
+                    nama: userData.nama,
+                    email: userData.email,
+                    posisi: userData.posisi,
+                    tipe: userData.resultType,
+                    skor: JSON.stringify(userData.scores),
+                    pdf: pdfBase64
+                };
+
+                await fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                // Melempar error lagi agar bisa ditangkap oleh processAndSendResults
+                throw error;
+            } finally {
+                // Memastikan elemen dihapus hanya sekali dan jika ada
+                if (document.body.contains(reportContainer)) {
+                    document.body.removeChild(reportContainer);
+                }
+            }
+        }
+
+    </script>
+</body>
+</html>
